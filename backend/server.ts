@@ -68,6 +68,7 @@ app.get('/auth/soundcloud/callback', async (req, res) => {
   }
 })
 
+// ✅ Route 3 — get user info
 app.get('/api/me', async (req, res) => {
   const token = req.session.access_token
   if (!token) {
@@ -90,6 +91,63 @@ app.get('/api/me', async (req, res) => {
     res
       .status(err.response?.status || 500)
       .json({ error: 'Failed to fetch user info' })
+  }
+})
+
+// ✅ Route 4 — get user tracks
+app.get('/api/me/tracks', async (req, res) => {
+  const token = req.session.access_token
+  if (!token) return res.status(401).json({ error: 'Not authenticated' })
+
+  try {
+    const response = await axios.get('https://api.soundcloud.com/me/tracks', {
+      headers: { Authorization: `OAuth ${token}` },
+    })
+    res.json(response.data)
+  } catch (err: any) {
+    console.error(
+      '❌ Error fetching tracks:',
+      err.response?.data || err.message
+    )
+    res.status(500).json({ error: 'Failed to fetch tracks' })
+  }
+})
+
+// ✅ Route 5 — get user playlists
+app.get('/api/me/playlists', async (req, res) => {
+  const token = req.session.access_token
+  if (!token) return res.status(401).json({ error: 'Not authenticated' })
+
+  try {
+    const response = await axios.get(
+      'https://api.soundcloud.com/me/playlists',
+      {
+        headers: { Authorization: `OAuth ${token}` },
+      }
+    )
+    res.json(response.data)
+  } catch (err: any) {
+    console.error(
+      '❌ Error fetching playlists:',
+      err.response?.data || err.message
+    )
+    res.status(500).json({ error: 'Failed to fetch playlists' })
+  }
+})
+
+// ✅ Route 6 — get user likes
+app.get('/api/me/likes', async (req, res) => {
+  const token = req.session.access_token
+  if (!token) return res.status(401).json({ error: 'Not authenticated' })
+
+  try {
+    const response = await axios.get('https://api.soundcloud.com/me/likes', {
+      headers: { Authorization: `OAuth ${token}` },
+    })
+    res.json(response.data)
+  } catch (err: any) {
+    console.error('❌ Error fetching likes:', err.response?.data || err.message)
+    res.status(500).json({ error: 'Failed to fetch likes' })
   }
 })
 
