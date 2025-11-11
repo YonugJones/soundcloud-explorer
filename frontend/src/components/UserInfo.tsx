@@ -22,13 +22,13 @@ function UserInfo() {
   if (!user) return null
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+    <div className='flex items-center gap-3'>
       <img
+        className='rounded-full'
         src={user.avatar_url}
         alt={user.username}
         width={50}
         height={50}
-        style={{ borderRadius: '50%' }}
       />
       <a href={user.permalink_url} target='blank' rel='noreferrer'>
         {user.username}
