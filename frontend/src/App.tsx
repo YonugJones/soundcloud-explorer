@@ -1,13 +1,13 @@
 import Header from './components/Header'
 import UserInfo from './components/UserInfo'
-import ProfileDashboard from './components/ProfileDashboard'
+import DashboardTabs from './components/DashboardTabs'
 
 function App() {
   return (
     <>
       <Header />
       <UserInfo />
-      <ProfileDashboard />
+      <DashboardTabs />
     </>
   )
 }

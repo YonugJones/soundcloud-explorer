@@ -135,19 +135,37 @@ app.get('/api/me/playlists', async (req, res) => {
   }
 })
 
-// ✅ Route 6 — get user likes
-app.get('/api/me/likes', async (req, res) => {
+// ⭐ Route: User Feed (activities from followed artists)
+app.get('/api/me/feed', async (req, res) => {
   const token = req.session.access_token
   if (!token) return res.status(401).json({ error: 'Not authenticated' })
 
   try {
-    const response = await axios.get('https://api.soundcloud.com/me/likes', {
-      headers: { Authorization: `OAuth ${token}` },
-    })
-    res.json(response.data)
+    const response = await axios.get(
+      'https://api.soundcloud.com/me/activities/tracks',
+      {
+        headers: { Authorization: `OAuth ${token}` },
+        params: {
+          limit: 20,
+        },
+      }
+    )
+
+    // Normalize: activities come as { origin: { track } }
+    const normalized = response.data.collection
+      .map((item: any) => item.origin)
+      .filter(Boolean)
+
+    res.json({ collection: normalized })
   } catch (err: any) {
-    console.error('❌ Error fetching likes:', err.response?.data || err.message)
-    res.status(500).json({ error: 'Failed to fetch likes' })
+    console.error(
+      '❌ Error fetching feed:',
+      err.response?.status,
+      err.response?.data || err.message
+    )
+    res
+      .status(err.response?.status || 500)
+      .json({ error: 'Failed to fetch feed' })
   }
 })
 

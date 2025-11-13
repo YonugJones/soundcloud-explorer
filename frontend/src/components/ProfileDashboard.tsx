@@ -35,8 +35,8 @@ export default function ProfileDashboard() {
   if (error) return <p className='text-red-600'>{error}</p>
 
   return (
-    <section className='max-w-6xl mx-auto my-10 px-4'>
-      <h2 className='text-2xl font-bold mb-4 text-white'>Your Tracks</h2>
+    <section className='max-w-6xl mx-auto my-10 px-4 text-white'>
+      <h2 className='text-2xl font-bold mb-4'>Your Tracks</h2>
       {tracks.length === 0 && <p className='text-gray-400'>No tracks found.</p>}
 
       <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6'>
@@ -60,9 +60,7 @@ export default function ProfileDashboard() {
               </div>
             )}
             <div className='p-3'>
-              <p className='font-semibold text-sm text-white truncate'>
-                {track.title}
-              </p>
+              <p className='font-semibold truncate'>{track.title}</p>
             </div>
           </a>
         ))}
