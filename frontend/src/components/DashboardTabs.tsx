@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { usePlayer } from '../context/PlayerContext'
 
 interface Track {
   id: number
@@ -15,6 +16,7 @@ export default function DashboardTabs() {
   const [items, setItems] = useState<Track[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const player = usePlayer()
 
   useEffect(() => {
     async function loadData() {
@@ -69,12 +71,10 @@ export default function DashboardTabs() {
 
       <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6'>
         {items.map((t) => (
-          <a
+          <div
             key={t.id}
-            href={t.permalink_url}
-            target='_blank'
-            rel='noreferrer'
-            className='bg-zinc-800 rounded-xl overflow-hidden shadow hover:shadow-lg transition'
+            onClick={() => player.playTrack(t)}
+            className='cursor-pointer bg-zinc-800 rounded-xl overflow-hidden shadow hover:shadow-lg transition transform hover:-translate-y-1'
           >
             {t.artwork_url ? (
               <img
@@ -87,13 +87,16 @@ export default function DashboardTabs() {
                 No Art
               </div>
             )}
+
             <div className='p-3'>
               <p className='font-semibold text-sm truncate'>{t.title}</p>
               {t.user && (
-                <p className='text-xs text-gray-400'>{t.user.username}</p>
+                <p className='text-xs text-gray-400 truncate'>
+                  {t.user.username}
+                </p>
               )}
             </div>
-          </a>
+          </div>
         ))}
       </div>
 

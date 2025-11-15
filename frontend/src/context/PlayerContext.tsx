@@ -1,67 +1,114 @@
-import { createContext, useContext, useRef, useState } from 'react'
+import {
+  createContext,
+  useContext,
+  useRef,
+  useState,
+  useEffect,
+  type ReactNode,
+} from 'react'
 
 interface Track {
   id: number
   title: string
+  permalink_url: string
   artwork_url?: string | null
-  stream_url?: string
   user?: { username: string }
 }
 
 interface PlayerContextType {
   currentTrack: Track | null
   isPlaying: boolean
-  progress: number // seconds
-  duration: number // seconds
+  progress: number
+  duration: number
   playTrack: (track: Track) => void
   togglePlay: () => void
   seek: (time: number) => void
 }
 
+declare global {
+  interface Window {
+    SC: any
+  }
+}
+
 const PlayerContext = createContext<PlayerContextType | undefined>(undefined)
 
-export function PlayerProvider({ children }: { children: React.ReactNode }) {
-  const audioRef = useRef(new Audio())
+export function PlayerProvider({ children }: { children: ReactNode }) {
+  const iframeRef = useRef<HTMLIFrameElement | null>(null)
+  const widgetRef = useRef<any>(null)
+
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [progress, setProgress] = useState(0)
   const [duration, setDuration] = useState(0)
+  const [ready, setReady] = useState(false)
+
+  useEffect(() => {
+    if (!iframeRef.current) return
+    if (!window.SC || !window.SC.Widget) {
+      console.warn('SoundCloud widget API not found on window.SC')
+      return
+    }
+
+    const widget = window.SC.Widget(iframeRef.current)
+    widgetRef.current = widget
+
+    widget.bind(window.SC.Widget.Events.READY, () => {
+      console.log('✅ SC widget READY')
+      setReady(true)
+    })
+
+    widget.bind(window.SC.Widget.Events.PLAY, () => {
+      setIsPlaying(true)
+    })
+
+    widget.bind(window.SC.Widget.Events.PAUSE, () => {
+      setIsPlaying(false)
+    })
+
+    widget.bind(window.SC.Widget.Events.PLAY_PROGRESS, (e: any) => {
+      if (e && typeof e.currentPosition === 'number') {
+        setProgress(e.currentPosition / 1000)
+      }
+    })
+
+    widget.bind(window.SC.Widget.Events.LOAD_PROGRESS, (e: any) => {
+      if (e && typeof e.duration === 'number') {
+        setDuration(e.duration / 1000)
+      }
+    })
+  }, [])
 
   function playTrack(track: Track) {
-    if (!track.stream_url) return
-
-    const audio = audioRef.current
-    audio.src = track.stream_url
-
-    audio.onloadedmetadata = () => {
-      setDuration(audio.duration)
+    if (!widgetRef.current || !ready) {
+      console.warn('Widget not ready yet')
+      return
     }
 
-    audio.ontimeupdate = () => {
-      setProgress(audio.currentTime)
-    }
-
-    audio.play()
+    console.log('▶️ Loading track in widget:', track.permalink_url)
     setCurrentTrack(track)
-    setIsPlaying(true)
+
+    widgetRef.current.load(track.permalink_url, {
+      auto_play: true,
+      buying: false,
+      liking: false,
+      download: false,
+      sharing: false,
+      show_comments: false,
+      hide_related: true,
+      visual: false,
+    })
   }
 
   function togglePlay() {
-    if (!currentTrack) return
-    const audio = audioRef.current
-
-    if (isPlaying) {
-      audio.pause()
-      setIsPlaying(false)
-    } else {
-      audio.play()
-      setIsPlaying(true)
-    }
+    if (!widgetRef.current) return
+    if (isPlaying) widgetRef.current.pause()
+    else widgetRef.current.play()
   }
 
   function seek(time: number) {
-    const audio = audioRef.current
-    audio.currentTime = time
+    if (!widgetRef.current) return
+    widgetRef.current.seekTo(time * 1000)
   }
 
   return (
@@ -76,6 +123,22 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         seek,
       }}
     >
+      {/* Invisible-ish player, but with non-zero size to avoid canvas errors */}
+      <iframe
+        ref={iframeRef}
+        title='soundcloud-widget'
+        src='https://w.soundcloud.com/player/?url='
+        style={{
+          position: 'fixed',
+          left: -9999,
+          top: -9999,
+          width: '300px',
+          height: '80px',
+          opacity: 0,
+          pointerEvents: 'none',
+        }}
+        allow='autoplay; encrypted-media'
+      />
       {children}
     </PlayerContext.Provider>
   )
@@ -83,6 +146,6 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
 
 export function usePlayer() {
   const ctx = useContext(PlayerContext)
-  if (!ctx) throw new Error('usePlayer must be used inside of PlayerProvider')
+  if (!ctx) throw new Error('usePlayer must be used inside PlayerProvider')
   return ctx
 }

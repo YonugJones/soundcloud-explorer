@@ -169,6 +169,32 @@ app.get('/api/me/feed', async (req, res) => {
   }
 })
 
+// Stream URL get route
+app.get('/api/stream/:trackId', async (req, res) => {
+  const { trackId } = req.params
+
+  try {
+    const response = await axios.get(
+      `https://api-v2.soundcloud.com/tracks/${trackId}/streams`,
+      {
+        params: {
+          client_id: CLIENT_ID,
+        },
+      }
+    )
+
+    res.json(response.data)
+  } catch (err: any) {
+    console.error(
+      '❌ Error fetching stream URL:',
+      err.response?.data || err.message
+    )
+    res
+      .status(err.response?.status || 500)
+      .json({ error: 'Failed to fetch stream URL' })
+  }
+})
+
 // ✅ Test route
 app.get('/', (req, res) => res.send('Backend is running 🚀'))
 
