@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { usePlayer } from '../context/PlayerContext'
+import { usePlayer } from '../hooks/usePlayer'
 
 interface Track {
   id: number

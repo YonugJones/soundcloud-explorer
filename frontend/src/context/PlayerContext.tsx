@@ -1,6 +1,5 @@
 import {
   createContext,
-  useContext,
   useRef,
   useState,
   useEffect,
@@ -31,7 +30,9 @@ declare global {
   }
 }
 
-const PlayerContext = createContext<PlayerContextType | undefined>(undefined)
+export const PlayerContext = createContext<PlayerContextType | undefined>(
+  undefined
+)
 
 export function PlayerProvider({ children }: { children: ReactNode }) {
   const iframeRef = useRef<HTMLIFrameElement | null>(null)
@@ -67,13 +68,13 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     })
 
     widget.bind(window.SC.Widget.Events.PLAY_PROGRESS, (e: any) => {
-      if (e && typeof e.currentPosition === 'number') {
+      if (e?.currentPosition != null) {
         setProgress(e.currentPosition / 1000)
       }
     })
 
     widget.bind(window.SC.Widget.Events.LOAD_PROGRESS, (e: any) => {
-      if (e && typeof e.duration === 'number') {
+      if (e?.duration != null) {
         setDuration(e.duration / 1000)
       }
     })
@@ -85,7 +86,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       return
     }
 
-    console.log('▶️ Loading track in widget:', track.permalink_url)
+    console.log('▶️ Loading track:', track.permalink_url)
     setCurrentTrack(track)
 
     widgetRef.current.load(track.permalink_url, {
@@ -102,8 +103,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
   function togglePlay() {
     if (!widgetRef.current) return
-    if (isPlaying) widgetRef.current.pause()
-    else widgetRef.current.play()
+    isPlaying ? widgetRef.current.pause() : widgetRef.current.play()
   }
 
   function seek(time: number) {
@@ -123,7 +123,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         seek,
       }}
     >
-      {/* Invisible-ish player, but with non-zero size to avoid canvas errors */}
+      {/* Hidden widget iframe */}
       <iframe
         ref={iframeRef}
         title='soundcloud-widget'
@@ -142,10 +142,4 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       {children}
     </PlayerContext.Provider>
   )
-}
-
-export function usePlayer() {
-  const ctx = useContext(PlayerContext)
-  if (!ctx) throw new Error('usePlayer must be used inside PlayerProvider')
-  return ctx
 }

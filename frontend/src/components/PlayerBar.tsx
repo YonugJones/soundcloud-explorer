@@ -1,4 +1,4 @@
-import { usePlayer } from '../context/PlayerContext'
+import { usePlayer } from '../hooks/usePlayer'
 
 export default function PlayerBar() {
   const { currentTrack, isPlaying, progress, duration, togglePlay, seek } =
