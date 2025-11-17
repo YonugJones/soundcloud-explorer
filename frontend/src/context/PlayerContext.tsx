@@ -61,6 +61,14 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
     widget.bind(window.SC.Widget.Events.PLAY, () => {
       setIsPlaying(true)
+
+      // 🎯 Always works: duration is available on PLAY
+      widget.getDuration((ms: number) => {
+        if (ms && ms > 0) {
+          setDuration(ms / 1000)
+          console.log('🎵 Duration fixed via PLAY:', ms / 1000)
+        }
+      })
     })
 
     widget.bind(window.SC.Widget.Events.PAUSE, () => {
@@ -68,14 +76,8 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     })
 
     widget.bind(window.SC.Widget.Events.PLAY_PROGRESS, (e: any) => {
-      if (e?.currentPosition != null) {
+      if (typeof e?.currentPosition === 'number') {
         setProgress(e.currentPosition / 1000)
-      }
-    })
-
-    widget.bind(window.SC.Widget.Events.LOAD_PROGRESS, (e: any) => {
-      if (e?.duration != null) {
-        setDuration(e.duration / 1000)
       }
     })
   }, [])
@@ -103,7 +105,11 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
   function togglePlay() {
     if (!widgetRef.current) return
-    isPlaying ? widgetRef.current.pause() : widgetRef.current.play()
+    if (isPlaying) {
+      widgetRef.current.pause()
+    } else {
+      widgetRef.current.play()
+    }
   }
 
   function seek(time: number) {
@@ -123,7 +129,6 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         seek,
       }}
     >
-      {/* Hidden widget iframe */}
       <iframe
         ref={iframeRef}
         title='soundcloud-widget'
