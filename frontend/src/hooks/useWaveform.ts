@@ -50,7 +50,7 @@ export function useWaveform(
 
     async function loadWaveform() {
       // Try hi-res → fallback
-      const base = waveformUrl.replace(/_(s|m|l)\.png$/, '')
+      const base = waveformUrl!.replace(/_(s|m|l)\.png$/, '')
       const candidates = [
         `${base}_xl.png`,
         `${base}_l.png`,
