@@ -11,6 +11,7 @@ interface Track {
   title: string
   permalink_url: string
   artwork_url?: string | null
+  waveform_url?: string | null
   user?: { username: string }
 }
 
@@ -89,6 +90,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     }
 
     console.log('▶️ Loading track:', track.permalink_url)
+    console.log('Waveform URL:', track.waveform_url)
     setCurrentTrack(track)
 
     widgetRef.current.load(track.permalink_url, {
