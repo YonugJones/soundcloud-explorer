@@ -9,9 +9,12 @@ export default function PlayerBar() {
 
   if (!currentTrack) return null
 
-  // Compute progress correctly — waveform spans whole audio
+  // Progress in %
   let percent = (progress / duration) * 100
   percent = Math.max(0, Math.min(percent, 100))
+
+  // Fixed container height for predictable pixel math
+  const BAR_CONTAINER_PX = 40 // matches h-10
 
   return (
     <div className='fixed bottom-0 left-0 w-full bg-zinc-900 text-white p-4 border-t border-zinc-700'>
@@ -29,11 +32,11 @@ export default function PlayerBar() {
         )}
 
         {/* Track info */}
-        <div className='flex flex-col w-60'>
-          <span className='font-semibold text-sm truncate'>
+        <div className='flex flex-col max-w-[150px] shrink-0'>
+          <span className='font-semibold text-sm whitespace-normal wrap-break-word'>
             {currentTrack.title}
           </span>
-          <span className='text-xs text-gray-400 truncate'>
+          <span className='text-xs text-gray-400 whitespace-normal wrap-break-word'>
             {currentTrack.user?.username}
           </span>
         </div>
@@ -41,41 +44,48 @@ export default function PlayerBar() {
         {/* Play/Pause */}
         <button
           onClick={togglePlay}
-          className='bg-orange-500 px-3 py-1 rounded text-sm'
+          className='bg-orange-500 px-3 py-1 rounded text-sm w-[70px] text-center shrink-0'
         >
           {isPlaying ? 'Pause' : 'Play'}
         </button>
 
-        {/* Waveform seek bar */}
-        <div className='flex-1 mx-4 relative'>
+        {/* Waveform */}
+        <div className='mx-4 relative grow' style={{ width: '70%' }}>
           <div className='w-full h-10 bg-zinc-800 rounded overflow-hidden relative'>
-            {/* Waveform bars */}
+            {/* Bars */}
             {waveform?.samples && (
-              <div className='absolute inset-0 flex z-0'>
+              <div className='absolute inset-0 flex items-center z-0 overflow-hidden w-full'>
                 {waveform.samples.map((value, i) => {
                   const normalized = value / waveform.maxSample
-                  const barHeight = normalized * 100
-                  const half = barHeight / 2
+
+                  // Full peak height in px
+                  const totalPx = normalized * BAR_CONTAINER_PX
+
+                  // Pixel-aligned halves
+                  const halfPx = Math.round(totalPx / 2)
 
                   return (
                     <div
                       key={i}
-                      className='flex-1 flex flex-col justify-center items-center'
+                      className='flex flex-col items-center justify-center'
+                      style={{ flex: '0 0 2px' }}
                     >
+                      {/* Top half */}
                       <div
                         className='bg-white'
                         style={{
-                          height: `${half}%`,
-                          opacity: 0.25,
+                          height: `${halfPx}px`,
                           width: '100%',
+                          opacity: 0.25,
                         }}
                       />
+                      {/* Bottom half */}
                       <div
                         className='bg-white'
                         style={{
-                          height: `${half}%`,
-                          opacity: 0.25,
+                          height: `${halfPx}px`,
                           width: '100%',
+                          opacity: 0.25,
                         }}
                       />
                     </div>
@@ -91,7 +101,7 @@ export default function PlayerBar() {
             />
           </div>
 
-          {/* Click-to-seek */}
+          {/* Click to seek */}
           <input
             type='range'
             min={0}
